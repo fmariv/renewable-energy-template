@@ -222,33 +222,6 @@
 		selectedButton = 'water';
 	};
 
-	const fetchProtected = async () => {
-		if (selected && $currentAnalytic === 'Protected Areas') {
-			selected = false;
-			selectedButton = '';
-			currentAnalytic.set('');
-			return;
-		}
-		if (!selected) {
-			selected = true;
-		}
-		geojson = null;
-		const response = await fetch(`${analytics_url}/protected`);
-		const data = await response.json();
-		if (Object.keys(data).length === 0) {
-			alert('No protected areas found in the selected area.');
-			return;
-		}
-		geojson = data;
-		currentAnalytic.set('Protected Areas');
-		geojsonOptions = {
-			style: { fillOpacity: 0.5, weight: 4, color: 'green', dashArray: '' },
-			pane: 'aoi',
-			zIndex: 0
-		};
-		selectedButton = 'protected';
-	};
-
 	const fetchElevation = async () => {
 		if (selected && $currentAnalytic === 'Elevation') {
 			selected = false;
@@ -353,13 +326,6 @@ and update the analytics store. The button should call the fetch function when c
 To see Material icons, go here: https://github.com/ramiroaisen/svelte-material-icons/tree/master/svelte-material-icons
 -->
 <h1>Geophisical layers</h1>
-<button
-	data-tip="Protected Areas"
-	class={`w-10 h-10 p-1 hover:bg-gray-100 ${selectedButton === 'protected' ? 'text-green-600' : 'text-gray-800'} tooltip tooltip-bottom`}
-	on:click={fetchProtected}
->
-	<Forest size="100%" />
-</button>
 
 <button
 	data-tip="Hydrological Network"
