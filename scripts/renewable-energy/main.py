@@ -6,15 +6,12 @@ from spai.data.utilities import (
     download_power_networks,
     download_pipelines,
 )
-import numpy as np
 from spai.storage import Storage
 from spai.config import SPAIVars
 import geopandas as gpd
-import rasterio
-import richdem as rd
 
-from .utils import create_buffer
-from .dem import process_dem
+from utils import create_buffer
+from dem import process_dem
 
 storage = Storage()["data"]
 vars = SPAIVars()
@@ -37,7 +34,6 @@ if __name__ == "__main__":
     download_waterways(storage, gdf_buffer)
     download_roads(storage, gdf_buffer)
     download_buildings(storage, gdf_buffer)
-    download_wdpa(storage, gdf_buffer)
     download_power_networks(storage, gdf_buffer)
     download_pipelines(storage, gdf_buffer)
 

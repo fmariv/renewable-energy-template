@@ -5,8 +5,8 @@ import { env } from '$env/dynamic/private';
 // must be changed here. The data is then returned as an object.
 
 export async function load({fetch}) {
-	const xyz_url = 'http://' +  env.XYZ_URL;
-	const analytics_url = 'http://' + env.ANALYTICS_URL;
+	const xyz_url = 'https://' +  env.XYZ_URL;
+	const analytics_url = 'https://' + env.ANALYTICS_URL;
 	console.log(xyz_url, analytics_url)
 	let res = [
 		await fetch(`${xyz_url}/`),

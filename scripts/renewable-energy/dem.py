@@ -5,6 +5,7 @@ Module to process a Digital Elevation Model (DEM) raster file.
 from spai.storage import Storage
 import rasterio
 import richdem as rd
+import numpy as np
 
 
 def process_dem(storage: Storage) -> None:
