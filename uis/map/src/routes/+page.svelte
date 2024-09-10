@@ -11,7 +11,7 @@
 	// Here we destructure the data object, which comes from the server
 	// Environment variables are used to determine the value of the data object
 	// The data object comes from +page.server.js
-	$: ({ xyz_url, analytics_url, aoi } = data);
+	$: ({ api_url, aoi } = data);
 
 	let layer;
 </script>
@@ -51,6 +51,6 @@
 		</Map>
 	</div>
 	<div class="w-[200px]">
-		<Analytics {aoi} {xyz_url} {analytics_url} />
+		<Analytics {aoi} {api_url} />
 	</div>
 </div>

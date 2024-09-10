@@ -6,11 +6,8 @@ scripts:
   - name: renewable-energy
     run_on_start: true
 apis:
-  - name: analytics
+  - name: api
     port: 8021
-    host: localhost
-  - name: xyz
-    port: 8022
     host: localhost
 uis:
   - name: map
@@ -19,5 +16,4 @@ uis:
     port: 5173
     runtime: node
     env:
-      ANALYTICS_URL: api.analytics
-      XYZ_URL: api.xyz
+      API_URL: api.api

@@ -4,8 +4,7 @@
 	import RenewableEnergy from '$components/analytics/RenewableEnergy.svelte';
 
 	export let aoi;
-	export let xyz_url;
-	export let analytics_url;
+	export let api_url;
 
 	let selected = true;
 	const toggleAOI = () => {
@@ -28,7 +27,7 @@
 	<!-- Here is where the analytics will be displayed -->
 	<!-- This is an example of how to import an analytics component -->
 	<!-- <ForestMonitoring {analytics} {date} {xyz_url} {analytics_url} {left} /> -->
-	<RenewableEnergy {xyz_url} {analytics_url} />
+	<RenewableEnergy {api_url} />
 </div>
 
 {#if selected}

@@ -15,8 +15,7 @@
 	import GeoJSONLayer from '$components/map/GeoJSONLayer.svelte';
 	import { analyticsStore, currentAnalytic } from '$stores/analytics.js';
 
-	export let xyz_url;
-	export let analytics_url;
+	export let api_url;
 	export let currentPlot;
 
 	let title;
@@ -32,6 +31,7 @@
 
 	let selectedButton = '';
 	let selected = false;
+	let xyz_url = `${api_url}/images`;
 
 	const fetchRoads = async () => {
 		if (selected && $currentAnalytic === 'Road Network') {
@@ -44,7 +44,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/roads`);
+		const response = await fetch(`${api_url}/analytics/roads`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No roads found in the selected area.');
@@ -71,7 +71,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/power_lines`);
+		const response = await fetch(`${api_url}/analytics/power_lines`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No power lines found in the selected area.');
@@ -98,7 +98,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/power_polygons`);
+		const response = await fetch(`${api_url}/analytics/power_polygons`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No power plants found in the selected area.');
@@ -134,7 +134,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/power_points`);
+		const response = await fetch(`${api_url}/analytics/power_points`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No roads transformers in the selected area.');
@@ -170,7 +170,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/pipelines`);
+		const response = await fetch(`${api_url}/analytics/pipelines`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No pipelines found in the selected area.');
@@ -206,7 +206,7 @@
 			selected = true;
 		}
 		geojson = null;
-		const response = await fetch(`${analytics_url}/waterways`);
+		const response = await fetch(`${api_url}/analytics/waterways`);
 		const data = await response.json();
 		if (Object.keys(data).length === 0) {
 			alert('No waterways found in the selected area.');

@@ -5,17 +5,14 @@ import { env } from '$env/dynamic/private';
 // must be changed here. The data is then returned as an object.
 
 export async function load({fetch}) {
-	const xyz_url = 'https://' +  env.XYZ_URL;
-	const analytics_url = 'https://' + env.ANALYTICS_URL;
-	console.log(xyz_url, analytics_url)
+	const api_url = 'https://' + env.API_URL;
 	let res = [
-		await fetch(`${xyz_url}/`),
-		await fetch(`${analytics_url}/aoi`)
+		await fetch(`${api_url}/`),
+		await fetch(`${api_url}/aoi`)
 	];
 	const [images, aoi] = await Promise.all(res.map(r => r.json()));
 	return {
-		xyz_url,
-		analytics_url,
+		api_url,
 		aoi
 	};
 }

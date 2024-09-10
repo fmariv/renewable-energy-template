@@ -1,32 +1,29 @@
 """
-XYZ API
+Analytics API
 """
 
-import os
-
-from typing import Optional
 import argparse
+import json
+import os
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from spai.image.xyz import get_image_data, get_tile_data, ready_image
-from spai.image.xyz.errors import ImageOutOfBounds
-from spai.storage import Storage
-from spai.config import SPAIVars
 from starlette.responses import StreamingResponse
 
-# init api
-app = FastAPI(title="xyz")
+import geopandas as gpd
 
-# configure CORS
-origins = [
-    "*",
-]
+from spai.storage import Storage
+from spai.config import SPAIVars
+from spai.image.xyz import get_image_data, get_tile_data, ready_image
+from spai.image.xyz.errors import ImageOutOfBounds
 
+
+app = FastAPI(title="api")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +33,63 @@ storage = Storage()["data"]
 vars = SPAIVars()
 
 
-@app.get("/")
+@app.get("/aoi")
+def retrieve_aoi():
+    return vars["AOI"]
+
+
+@app.get("/aois/{scenario}")
+def retrieve_aoi_id(scenario: str):
+    aois = vars["AOI"]
+    scenario = scenario.lower()
+    # read the dict as geodataframe
+    gdf = gpd.GeoDataFrame.from_features(aois)
+    aoi = gdf[gdf["scenario"] == scenario]
+    aoi_gdf = json.loads(aoi.to_json())
+
+    return aoi_gdf
+
+
+@app.get("/analytics/{file}")
+async def analytics(file: str):
+    """
+    Return water quality analytics
+
+    Parameters
+    ----------
+    file : str
+        Name of analytics file
+
+    Parameters
+    ----------
+    file : str
+        Name of analytics file
+
+    Returns
+    -------
+    analytics : dict
+        Dictionary with water quality analytics
+
+    Raises
+    ------
+    HTTPException
+        If analytics file doesn't exist
+    """
+    try:
+        print(file)
+        if not storage.exists(f"{file}.geojson"):
+            print("no")
+            return {}
+        analytics = storage.read(f"{file}.geojson")
+        analytics = analytics.to_json()
+        # convert to dict
+        analytics = json.loads(analytics)
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/images/")
 def retrieve_images():
     """
     Return available images
@@ -49,7 +102,7 @@ def retrieve_images():
     return storage.list("*.tif")
 
 
-@app.get("/{image}")
+@app.get("/images/{image}")
 def check_image_exists(image: str):
     """
     Check if image exists
@@ -68,7 +121,7 @@ def check_image_exists(image: str):
     return os.path.exists(path)
 
 
-@app.get("/{image}/{z}/{x}/{y}.png")
+@app.get("/images/{image}/{z}/{x}/{y}.png")
 def retrieve_image_tile(
     image: str,
     z: int,
@@ -128,6 +181,6 @@ def retrieve_image_tile(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
     uvicorn.run(app, host=args.host, port=args.port)
