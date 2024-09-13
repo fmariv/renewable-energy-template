@@ -14,4 +14,3 @@ tqdm
 matplotlib
 pyarrow
 numpy
-richdem
