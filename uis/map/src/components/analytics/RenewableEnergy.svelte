@@ -246,54 +246,6 @@
 		selectedButton = 'elevation';
 	};
 
-	const fetchSlope = async () => {
-		if (selected && $currentAnalytic === 'Slope') {
-			selected = false;
-			showRaster = false;
-			selectedButton = '';
-			currentAnalytic.set('');
-			return;
-		}
-		if (!selected) {
-			selected = true;
-		}
-		if (!showRaster) {
-			showRaster = true;
-		}
-		geojson = null;
-		geojsonOptions = {};
-		currentAnalytic.set('Slope');
-		image = `slope`;
-		bands = [1];
-		stretch = [0, 33];
-		palette = 'terrain';
-		selectedButton = 'slope';
-	};
-
-	const fetchAspect = async () => {
-		if (selected && $currentAnalytic === 'Aspect') {
-			selected = false;
-			showRaster = false;
-			selectedButton = '';
-			currentAnalytic.set('');
-			return;
-		}
-		if (!selected) {
-			selected = true;
-		}
-		if (!showRaster) {
-			showRaster = true;
-		}
-		geojson = null;
-		geojsonOptions = {};
-		currentAnalytic.set('Aspect');
-		image = `aspect`;
-		bands = [1];
-		stretch = [0, 360];
-		palette = 'hsv';
-		selectedButton = 'aspect';
-	};
-
 	const fetchLandcover = async () => {
 		if (selected && $currentAnalytic === 'Land Cover') {
 			selected = false;
@@ -341,22 +293,6 @@ To see Material icons, go here: https://github.com/ramiroaisen/svelte-material-i
 	on:click={fetchElevation}
 >
 	<ElevationRise size="100%" />
-</button>
-
-<button
-	data-tip="Slope"
-	class={`w-10 h-10 p-1 hover:bg-gray-100 ${selectedButton === 'slope' ? 'text-green-600' : 'text-gray-800'} tooltip tooltip-bottom`}
-	on:click={fetchSlope}
->
-	<SlopeDownhill size="100%" />
-</button>
-
-<button
-	data-tip="Orientation"
-	class={`w-10 h-10 p-1 hover:bg-gray-100 ${selectedButton === 'aspect' ? 'text-green-600' : 'text-gray-800'} tooltip tooltip-bottom`}
-	on:click={fetchAspect}
->
-	<SunAngle size="100%" />
 </button>
 
 <button

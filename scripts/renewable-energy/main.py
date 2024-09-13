@@ -11,7 +11,6 @@ from spai.config import SPAIVars
 import geopandas as gpd
 
 from utils import create_buffer
-from dem import process_dem
 
 storage = Storage()["data"]
 vars = SPAIVars()
@@ -36,6 +35,3 @@ if __name__ == "__main__":
     download_buildings(storage, gdf_buffer)
     download_power_networks(storage, gdf_buffer)
     download_pipelines(storage, gdf_buffer)
-
-    # Process the DEM
-    process_dem(storage)
