@@ -13,9 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
 
 import geopandas as gpd
+import numpy as np
 
 from spai.storage import Storage
 from spai.config import SPAIVars
+from spai.processing import read_raster
 from spai.image.xyz import get_image_data, get_tile_data, ready_image
 from spai.image.xyz.errors import ImageOutOfBounds
 
@@ -175,6 +177,22 @@ def retrieve_image_tile(
         return StreamingResponse(image, media_type="image/png")
     except ImageOutOfBounds as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error.message)
+
+
+@app.get("/dem")
+def get_dem_min_max_values():
+    """
+    Get min and max values of the DEM
+
+    Returns
+    -------
+    min_max_values : dict
+        Dictionary with min and max values
+    """
+    ds, dem = read_raster("dem.tif", storage)
+    min_value = float(np.min(dem))
+    max_value = float(np.max(dem))
+    return {"min": min_value, "max": max_value}
 
 
 # need this to run in background

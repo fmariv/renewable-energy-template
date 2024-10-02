@@ -5,9 +5,6 @@
 	import Switch from 'svelte-material-icons/Switch.svelte';
 	import Water from 'svelte-material-icons/Water.svelte';
 	import ElevationRise from 'svelte-material-icons/ElevationRise.svelte';
-	import SlopeDownhill from 'svelte-material-icons/SlopeDownhill.svelte';
-	import Castle from 'svelte-material-icons/Castle.svelte';
-	import SunAngle from 'svelte-material-icons/SunAngle.svelte';
 	import GasBurner from 'svelte-material-icons/GasBurner.svelte';
 	import Battery from 'svelte-material-icons/Battery.svelte';
 	import LandFields from 'svelte-material-icons/LandFields.svelte';
@@ -239,9 +236,14 @@
 		geojson = null;
 		geojsonOptions = {};
 		currentAnalytic.set('Elevation');
+
+		// Fetch min and max elevation values
+		const response = await fetch(`${api_url}/dem`);
+		const data = await response.json();
+		stretch = [data.min, data.max];
+		console.log(stretch);
 		image = `dem`;
 		bands = [1];
-		stretch = [293, 1117];
 		palette = 'terrain';
 		selectedButton = 'elevation';
 	};
