@@ -205,7 +205,7 @@
 	const fetchLandcover = () =>
 		toggleRaster({
 			id: 'landuse',
-			image: 'landcover',
+			image: 'land_cover',
 			title: 'Land Cover',
 			bands: [1],
 			stretch: [10, 100],
