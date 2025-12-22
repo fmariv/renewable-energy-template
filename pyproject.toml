@@ -11,7 +11,7 @@ dependencies = [
     "geopandas>=1.1.1",
     "matplotlib>=3.10.3",
     "mercantile==1.2.1",
-    "minio==7.2.16",
+    "minio==7.1.15",
     "numpy==2.3.1",
     "odc-geo==0.4.7",
     "odc-stac>=0.4.0",
@@ -27,8 +27,7 @@ dependencies = [
     "rioxarray>=0.18.2",
     "scikit-image>=0.25.2",
     "shapely==2.1.1",
-    "spai==2025.8.6.post2",
+    "spai==2025.11.25.dev3",
     "tqdm>=4.67.1",
-    "uvicorn==0.35.0",
-    "minio==7.1.15"
+    "uvicorn==0.35.0"
 ]
