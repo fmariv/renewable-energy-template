@@ -78,9 +78,7 @@ async def analytics(file: str):
         If analytics file doesn't exist
     """
     try:
-        print(file)
         if not storage.exists(f"{file}.geojson"):
-            print("no")
             return {}
         analytics = storage.read(f"{file}.geojson")
         analytics = analytics.to_json()
