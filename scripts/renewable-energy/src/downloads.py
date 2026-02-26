@@ -1,3 +1,4 @@
+import logging
 import geopandas as gpd
 from spai.data.satellite import download_satellite_imagery
 from spai.data.hidrology import download_waterways
@@ -10,6 +11,8 @@ from spai.data.utilities import (
 from spai.data.ecosystems import download_protected_areas
 from .utilities import create_buffer
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def download_terrain_data(storage, gdf: gpd.GeoDataFrame) -> tuple:
@@ -28,14 +31,14 @@ def download_terrain_data(storage, gdf: gpd.GeoDataFrame) -> tuple:
     tuple
         (dem, land_cover) downloaded files
     """
-    print("Downloading terrain data...", flush=True)
+    logger.info("Downloading terrain data...")
     dem = download_satellite_imagery(
         storage, gdf, collection="cop-dem-glo-30", name="dem.tif"
     )
     lc = download_satellite_imagery(
         storage, gdf, date="2021", collection="esa-worldcover", name="land_cover.tif"
     )
-    print("Terrain data downloaded successfully", flush=True)
+    logger.info("Terrain data downloaded successfully")
     return dem, lc
 
 
@@ -50,11 +53,11 @@ def download_geophysical_data(storage, gdf: gpd.GeoDataFrame) -> None:
     gdf : GeoDataFrame
         GeoDataFrame with the area of interest
     """
-    print("Downloading geophysical data...", flush=True)
+    logger.info("Downloading geophysical data...")
     gdf_buffer = create_buffer(gdf, 5000)
     download_waterways(storage, gdf_buffer)
     download_protected_areas(storage, gdf_buffer)
-    print("Geophysical data downloaded successfully", flush=True)
+    logger.info("Geophysical data downloaded successfully")
 
 
 def download_power_networks(
@@ -93,7 +96,7 @@ def download_power_networks(
     """
     final_power_networks_gdf = load_power_networks(aoi, source, query, crs)
 
-    print("Downloading power networks data...", flush=True)
+    logger.info("Downloading power networks data...")
     lines_gdf = final_power_networks_gdf[
         final_power_networks_gdf.geometry.type.isin(("LineString", "MultiLineString"))
     ]
@@ -116,7 +119,7 @@ def download_power_networks(
         storage.create(points_gdf, name=point_name)
     if not polygons_gdf.empty:
         storage.create(polygons_gdf, name=polygon_name)
-    print("Power networks data downloaded successfully", flush=True)
+    logger.info("Power networks data downloaded successfully")
 
 
 def download_pipelines(
@@ -148,12 +151,12 @@ def download_pipelines(
     crs : str, optional
         The coordinate reference system to use, by default WGS84 (EPSG:4326)
     """
-    print("Downloading pipelines data...", flush=True)
+    logger.info("Downloading pipelines data...")
     lines_gdf = load_pipelines(aoi, source, query, crs)
     lines_gdf = lines_gdf.map(lambda x: x if not isinstance(x, list) else str(x))
     if not lines_gdf.empty:
         storage.create(lines_gdf, name=name)
-    print("Pipelines data downloaded successfully", flush=True)
+    logger.info("Pipelines data downloaded successfully")
 
 
 def download_infrastructure_data(storage, gdf: gpd.GeoDataFrame) -> None:

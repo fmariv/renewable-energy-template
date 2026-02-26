@@ -1,6 +1,9 @@
+import logging
 import geopandas as gpd
 import pandas as pd
 from .utilities import create_buffer
+
+logger = logging.getLogger(__name__)
 
 def find_suitable_areas(storage, aoi_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
@@ -20,7 +23,7 @@ def find_suitable_areas(storage, aoi_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     GeoDataFrame
         Areas that meet the criteria
     """
-    print("Finding suitable areas...", flush=True)
+    logger.info("Finding suitable areas...")
     # Load all required layers
     protected_areas, roads, power_networks, pipelines = None, None, None, None
     if storage.exists("protected_areas.geojson"):
@@ -71,4 +74,4 @@ def find_suitable_areas(storage, aoi_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     if not suitable_areas.empty:
         storage.create(suitable_areas, "suitable_areas.geojson")
 
-    print("Suitable areas found successfully", flush=True)
+    logger.info("Suitable areas found successfully")
