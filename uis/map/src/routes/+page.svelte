@@ -47,7 +47,7 @@
 					options={{ maxZoom: 20, zIndex: 1 }}
 				/>
 			{/if}
-			<LayersControl layers={['light', 'dark', 'streets', 'satellite']} bind:layer />
+			<LayersControl layers={['satellite', 'light', 'dark', 'streets']} bind:layer />
 		</Map>
 	</div>
 	<div class="w-[200px]">
