@@ -16,8 +16,9 @@
 	let layer;
 </script>
 
-<div class="w-screen h-screen flex flex-row gap-3 p-3">
-	<div class="flex flex-col flex-1 gap-3">
+<div class="box-border flex min-h-0 flex-1 flex-row gap-3 p-3">
+	<div class="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+		<div class="h-full min-h-0 min-w-0 flex-1">
 		<Map
 			zoom={6}
 			panes={[
@@ -49,8 +50,9 @@
 			{/if}
 			<LayersControl layers={['satellite', 'light', 'dark', 'streets']} bind:layer />
 		</Map>
+		</div>
 	</div>
-	<div class="w-[200px]">
+	<div class="flex w-[200px] flex-shrink-0 flex-col overflow-y-auto">
 		<Analytics {aoi} {api_url} />
 	</div>
 </div>
