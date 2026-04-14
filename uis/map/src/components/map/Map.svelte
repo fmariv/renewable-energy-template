@@ -41,7 +41,7 @@
 	});
 </script>
 
-<div id="map">
+<div id="map" class="h-full min-h-0 w-full">
 	{#if $map}
 		<slot />
 	{/if}
