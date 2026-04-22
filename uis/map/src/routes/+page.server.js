@@ -1,23 +1,18 @@
 import { env } from '$env/dynamic/private';
 
-export async function load({ fetch }) {
+// Here is the code for the server-side route. The environment variables are imported from the private environment file. 
+// The load function is an async function that fetches data from the backend services, so the default analytic
+// must be changed here. The data is then returned as an object.
+
+export async function load({fetch}) {
 	const ENV = import.meta.env.VITE_ENV;
-	const origin = ENV === 'PRO' ? 'https://' : 'http://';
-	const api_url = env.API_URL ? `${origin}${env.API_URL}` : null;
-	if (!api_url) {
-		return { api_url: null, aoi: null };
-	}
-
-	let aoi = null;
-	try {
-		const aoiRes = await fetch(`${api_url}/aoi`);
-		if (aoiRes.ok) {
-			aoi = await aoiRes.json();
-		}
-	} catch (e) {
-		console.error('Failed to fetch AOI', e);
-	}
-
+	let origin = ENV === 'PRO' ? 'https://' : 'http://';
+	const api_url = `${origin}${env.API_URL}`;
+	let res = [
+		await fetch(`${api_url}/`),
+		await fetch(`${api_url}/aoi`)
+	];
+	const [images, aoi] = await Promise.all(res.map(r => r.json()));
 	return {
 		api_url,
 		aoi
