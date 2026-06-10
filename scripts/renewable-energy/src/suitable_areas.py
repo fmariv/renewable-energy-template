@@ -75,3 +75,4 @@ def find_suitable_areas(storage, aoi_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         storage.create(suitable_areas, "suitable_areas.geojson")
 
     logger.info("Suitable areas found successfully")
+    return suitable_areas
