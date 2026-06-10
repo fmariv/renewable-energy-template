@@ -11,6 +11,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import geopandas as gpd
 import numpy as np
@@ -30,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Instrumentator().instrument(app).expose(app=app)
 
 storage = Storage()["data"]
 vars = SPAIVars()
@@ -192,6 +195,10 @@ def get_dem_min_max_values():
     max_value = float(np.max(dem))
     return {"min": min_value, "max": max_value}
 
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 # need this to run in background
 if __name__ == "__main__":
