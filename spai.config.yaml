@@ -5,14 +5,14 @@ storage:
 scripts:
   - name: renewable-energy
     run_on_start: true
-    workdir: /app2 # useful also when using custom Dockerfile (no image)
-    image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-script:v0
+    # workdir: /app2 # useful also when using custom Dockerfile (no image)
+    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-script:v0
 apis:
   - name: api
     port: 8021
     host: localhost
-    workdir: /app
-    image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-api:v0
+    # workdir: /app
+    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-api:v0
     autoscaling:
       min: 1
       max: 1
@@ -23,8 +23,8 @@ uis:
     command: npm run deploy
     port: 5173
     runtime: node
-    workdir: /app
-    image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-ui:v0
+    # workdir: /app
+    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-ui:v0
     autoscaling:
       min: 1
       max: 1
