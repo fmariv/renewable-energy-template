@@ -2,6 +2,7 @@
 	import Map from 'svelte-material-icons/Map.svelte';
 	import GeoJSONLayer from '$components/map/GeoJSONLayer.svelte';
 	import RenewableEnergy from '$components/analytics/RenewableEnergy.svelte';
+	import PipelineStatusCard from '$components/PipelineStatusCard.svelte';
 
 	export let aoi;
 	export let api_url;
@@ -13,6 +14,7 @@
 </script>
 
 <div>
+	<PipelineStatusCard {api_url} />
 	<!-- There are some components that already have the h1 title, i.e. Water Quality, so this code block can be omitted. -->
 	<h1>Area of Interest</h1>
 	<button

@@ -196,6 +196,46 @@ def get_dem_min_max_values():
     return {"min": min_value, "max": max_value}
 
 
+def _read_pipeline_status() -> dict:
+    """Read pipeline_status.json from storage as a plain dict."""
+    status_path = "pipeline_status.json"
+    idle = {
+        "status": "Idle",
+        "message": "No pipeline run yet",
+        "updated_at": None,
+    }
+    if not storage.exists(status_path):
+        return idle
+    try:
+        with open(storage.get_path(status_path), encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict) and "status" in data:
+            return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return idle
+
+
+@app.get("/pipeline/status")
+def pipeline_status():
+    """Current pipeline status registry from storage."""
+    return _read_pipeline_status()
+
+
+@app.get("/data_available")
+def data_available():
+    """Whether the pipeline has produced ready outputs."""
+    pipeline = _read_pipeline_status()
+    ready = pipeline.get("status") == "Ready"
+    return {
+        "status": "healthy",
+        "data_available": ready,
+        "data_status": "ready" if ready else "no_data",
+        "pipeline_status": pipeline.get("status"),
+        "message": pipeline.get("message"),
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
