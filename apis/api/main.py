@@ -15,6 +15,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 
 from spai.storage import Storage
 from spai.config import SPAIVars
@@ -197,7 +198,7 @@ def get_dem_min_max_values():
 
 
 def _read_pipeline_status() -> dict:
-    """Read pipeline_status.json from storage as a plain dict."""
+    """Read pipeline_status.json from storage via pandas, return a plain dict."""
     status_path = "pipeline_status.json"
     idle = {
         "status": "Idle",
@@ -207,13 +208,21 @@ def _read_pipeline_status() -> dict:
     if not storage.exists(status_path):
         return idle
     try:
-        with open(storage.get_path(status_path), encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, dict) and "status" in data:
-            return data
+        df = storage.read(status_path)
+        if df is None or df.empty:
+            return idle
+        row = df.iloc[0]
+        out = {}
+        for key, value in row.items():
+            if pd.isna(value):
+                out[key] = None
+            elif hasattr(value, "isoformat"):
+                out[key] = value.isoformat()
+            else:
+                out[key] = value
+        return out
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    return idle
 
 
 @app.get("/pipeline/status")
