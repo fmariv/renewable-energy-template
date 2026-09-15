@@ -23,7 +23,7 @@ from spai.processing import read_raster
 from spai.image.xyz import get_image_data, get_tile_data, ready_image
 from spai.image.xyz.errors import ImageOutOfBounds
 
-from pipeline_status import data_available_payload, read_pipeline_status
+from src.pipeline_status import data_available_payload, read_pipeline_status
 
 
 app = FastAPI(title="api")

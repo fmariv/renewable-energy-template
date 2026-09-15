@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     """Main function that executes the workflow"""
+    storage = None
     try:
         storage = Storage()["data"]
         set_status(
@@ -82,24 +83,21 @@ def main():
         set_status(storage, BUILDING, "Finding suitable areas...")
         suitable_areas = find_suitable_areas(storage, gdf)
 
-        suitable_areas_utm = suitable_areas.to_crs(suitable_areas.estimate_utm_crs())
         area_km2 = 0.0
-        if suitable_areas_utm is not None and not suitable_areas_utm.empty:
+        n_locations = 0
+        if suitable_areas is not None and not suitable_areas.empty:
+            suitable_areas_utm = suitable_areas.to_crs(
+                suitable_areas.estimate_utm_crs()
+            )
             area_km2 = round(
                 suitable_areas_utm.to_crs(epsg=3857).geometry.area.sum() / 1e6, 2
             )
+            n_locations = len(suitable_areas_utm)
 
         log_results(
             [
                 Result(label="Suitable area", value=area_km2, unit="km2"),
-                Result(
-                    label="Number of suitable locations",
-                    value=(
-                        len(suitable_areas_utm)
-                        if suitable_areas_utm is not None
-                        else 0
-                    ),
-                ),
+                Result(label="Number of suitable locations", value=n_locations),
             ]
         )
 

@@ -5,9 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN yarn install
 COPY . .
-
-# COPY .env .env
-ENV VITE_MAPTILER_API_KEY=Bt2GGUzYlgDlJPEUlaHs
+COPY .env .env
 
 EXPOSE 80
 

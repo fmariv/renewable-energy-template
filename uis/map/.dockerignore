@@ -4,9 +4,6 @@ build/
 .vercel/
 .output/
 package/
-.env
-.env.*
-!.env.example
 .DS_Store
 .cursor/
 .git/

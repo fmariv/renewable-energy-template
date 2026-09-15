@@ -14,18 +14,44 @@
 
 	const POLL_MS = 5000;
 	const READY_HIDE_MS = 3000;
+	const UNREACHABLE_AFTER = 6; // ~30s of sustained failures
 	const EP_TURQUOISE = '#00C9B1';
 
+	/** @type {'Idle'|'Building'|'Warning'|'Error'|'Ready'|'Unreachable'} */
 	let status = 'Idle';
 	let message = '';
 	let visible = true;
 	let pollId = null;
 	let hideTimeout = null;
+	let consecutiveFailures = 0;
+
+	const KNOWN = new Set(['Idle', 'Building', 'Warning', 'Error', 'Ready']);
+
+	/** Unwrap pandas column-orient leftovers: {"0":"Error"} → "Error" */
+	const unwrap = (value) => {
+		if (value == null) return null;
+		if (typeof value === 'object' && !Array.isArray(value)) {
+			if (Object.prototype.hasOwnProperty.call(value, '0')) return unwrap(value['0']);
+			if (Object.prototype.hasOwnProperty.call(value, 0)) return unwrap(value[0]);
+			const vals = Object.values(value);
+			if (vals.length === 1) return unwrap(vals[0]);
+		}
+		if (Array.isArray(value) && value.length === 1) return unwrap(value[0]);
+		return value;
+	};
+
+	const normalizeStatus = (raw) => {
+		const s = unwrap(raw);
+		if (s == null || s === '') return null;
+		const text = String(s).trim();
+		return KNOWN.has(text) ? text : null;
+	};
 
 	const isProcessing = (s) => s === 'Idle' || s === 'Building';
 
 	const titleFor = (s) => {
 		if (s === 'Error') return 'Error downloading data';
+		if (s === 'Unreachable') return 'Unable to read pipeline status';
 		if (s === 'Warning') return 'Heads up';
 		if (s === 'Ready') return 'Your data is ready';
 		return 'Preparing your data';
@@ -33,20 +59,25 @@
 
 	const subtitleFor = (s, msg) => {
 		if (s === 'Error') return 'Check the logs or contact support.';
+		if (s === 'Unreachable') {
+			return 'Could not reach the status API. Check the logs or contact support.';
+		}
 		if (s === 'Warning') return msg || 'Processing continues with incomplete layers.';
 		if (s === 'Ready') return msg || 'Layers are available on the map.';
 		return 'Downloading and processing the required layers. Please wait a few minutes…';
 	};
 
 	const cardStyle = (s) => {
-		if (s === 'Error') return 'border-color: #FECACA; background: #FFF7F7;';
+		if (s === 'Error' || s === 'Unreachable') {
+			return 'border-color: #FECACA; background: #FFF7F7;';
+		}
 		if (s === 'Warning') return 'border-color: #FDE68A; background: #FFFBEB;';
 		if (s === 'Ready') return 'border-color: #BBF7D0; background: #F0FDF4;';
 		return 'border-color: #E5E7EB; background: #FFFFFF;';
 	};
 
 	const accentFor = (s) => {
-		if (s === 'Error') return '#E11D48';
+		if (s === 'Error' || s === 'Unreachable') return '#E11D48';
 		if (s === 'Warning') return '#D97706';
 		if (s === 'Ready') return '#16A34A';
 		return EP_TURQUOISE;
@@ -59,14 +90,46 @@
 		}
 	};
 
+	const markUnreachable = () => {
+		consecutiveFailures += 1;
+		// Stay on Idle/Building ("Preparing…") during early / transient failures.
+		// Only surface Unreachable after sustained failure (~30s).
+		if (consecutiveFailures >= UNREACHABLE_AFTER) {
+			status = 'Unreachable';
+			message = '';
+			visible = true;
+		}
+	};
+
 	const fetchStatus = async () => {
 		try {
 			const res = await fetch(`${api_url}/pipeline/status`);
-			if (!res.ok) return;
+			if (!res.ok) {
+				markUnreachable();
+				return;
+			}
 			const data = await res.json();
-			const next = data.status || 'Idle';
+			// Also unwrap if the whole payload is column-orient
+			let statusRaw = data?.status;
+			if (
+				statusRaw == null &&
+				data &&
+				typeof data === 'object' &&
+				data.status == null &&
+				Object.prototype.hasOwnProperty.call(data, '0')
+			) {
+				statusRaw = data;
+			}
+			const next = normalizeStatus(statusRaw);
+			if (!next) {
+				markUnreachable();
+				return;
+			}
+
+			consecutiveFailures = 0;
 			status = next;
-			message = data.message || '';
+			const msg = unwrap(data?.message);
+			message = msg == null ? '' : String(msg);
 
 			if (next === 'Ready') {
 				stopPolling();
@@ -82,7 +145,7 @@
 				visible = true;
 			}
 		} catch {
-			// Keep previous state on network errors
+			markUnreachable();
 		}
 	};
 
@@ -98,12 +161,12 @@
 </script>
 
 {#if visible}
-	<div class="pointer-events-none absolute inset-x-0 top-3 z-[5000] flex justify-center px-3">
+	<div class="pointer-events-none fixed inset-x-0 top-16 z-[5000] flex justify-center px-3">
 		<div
 			class="flex w-full max-w-[440px] items-start gap-3 border px-4 py-3 shadow-md"
 			style={`border-radius: 12px; ${cardStyle(status)}`}
 			role="status"
-			aria-live="polite"
+			aria-live="assertive"
 		>
 			{#if isProcessing(status)}
 				<span
