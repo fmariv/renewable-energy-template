@@ -10,9 +10,9 @@ from src.downloads import (
 from src.suitable_areas import find_suitable_areas
 from src.status_registry import (
     BUILDING,
-    ERROR,
     READY,
     WARNING,
+    set_error,
     set_status,
 )
 import geopandas as gpd
@@ -23,25 +23,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-storage = Storage()["data"]
-vars = SPAIVars()
-
 
 def main():
     """Main function that executes the workflow"""
-    storage = Storage()["data"]
-    vars = SPAIVars()
-    aoi = vars["AOI"]
-    gdf = gpd.GeoDataFrame.from_features(aoi, crs="EPSG:4326")
-
-    log_inputs(vars["AOI"])
-
     try:
+        storage = Storage()["data"]
         set_status(
             storage,
             BUILDING,
             "Data is being downloaded and processed...",
         )
+
+        vars = SPAIVars()
+        aoi = vars["AOI"]
+        gdf = gpd.GeoDataFrame.from_features(aoi, crs="EPSG:4326")
+
+        log_inputs(vars["AOI"])
 
         set_status(storage, BUILDING, "Downloading terrain data...")
         download_terrain_data(storage, gdf)
@@ -53,8 +50,14 @@ def main():
             )
 
         set_status(storage, BUILDING, "Downloading geophysical data...")
-        download_geophysical_data(storage, gdf)
-        if not storage.exists("protected_areas.geojson"):
+        geo_failed = download_geophysical_data(storage, gdf)
+        if geo_failed:
+            set_status(
+                storage,
+                WARNING,
+                f"Some geophysical layers could not be downloaded: {', '.join(geo_failed)}",
+            )
+        elif not storage.exists("protected_areas.geojson"):
             set_status(
                 storage,
                 WARNING,
@@ -62,8 +65,14 @@ def main():
             )
 
         set_status(storage, BUILDING, "Downloading infrastructure data...")
-        download_infrastructure_data(storage, gdf)
-        if not storage.exists("roads.geojson"):
+        infra_failed = download_infrastructure_data(storage, gdf)
+        if infra_failed:
+            set_status(
+                storage,
+                WARNING,
+                f"Some OSM layers could not be downloaded: {', '.join(infra_failed)}. Continuing without them.",
+            )
+        elif not storage.exists("roads.geojson"):
             set_status(
                 storage,
                 WARNING,
@@ -103,9 +112,14 @@ def main():
         else:
             set_status(storage, READY, "Pipeline completed successfully")
 
-    except Exception as e:
+    except Exception:
         logger.exception("Pipeline failed")
-        set_status(storage, ERROR, str(e))
+        try:
+            if storage is None:
+                storage = Storage()["data"]
+            set_error(storage)
+        except Exception:
+            logger.warning("Failed to write pipeline error status", exc_info=True)
         raise
 
 

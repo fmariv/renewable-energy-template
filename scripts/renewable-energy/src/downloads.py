@@ -10,9 +10,19 @@ from spai.data.utilities import (
 )
 from spai.data.ecosystems import download_protected_areas
 from .utilities import create_buffer
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _try_osm_download(label: str, fn: Callable[[], None]) -> Optional[str]:
+    """Run an OSM download; on failure log and return the layer label, else None."""
+    try:
+        fn()
+        return None
+    except Exception as exc:
+        logger.warning("OSM download failed for %s (continuing): %s", label, exc)
+        return label
 
 
 def download_terrain_data(storage, gdf: gpd.GeoDataFrame) -> tuple:
@@ -42,22 +52,35 @@ def download_terrain_data(storage, gdf: gpd.GeoDataFrame) -> tuple:
     return dem, lc
 
 
-def download_geophysical_data(storage, gdf: gpd.GeoDataFrame) -> None:
+def download_geophysical_data(storage, gdf: gpd.GeoDataFrame) -> list[str]:
     """
-    Downloads geophysical data (waterways and protected areas)
+    Downloads geophysical data (waterways and protected areas).
 
-    Parameters
-    ----------
-    storage : Storage
-        Storage object to save the downloaded data
-    gdf : GeoDataFrame
-        GeoDataFrame with the area of interest
+    OSM/network failures are soft: the layer is skipped and its name is returned
+    so the caller can mark a Warning without stopping the pipeline.
     """
     logger.info("Downloading geophysical data...")
     gdf_buffer = create_buffer(gdf, 5000)
-    download_waterways(storage, gdf_buffer)
-    download_protected_areas(storage, gdf_buffer)
-    logger.info("Geophysical data downloaded successfully")
+    failed: list[str] = []
+
+    skipped = _try_osm_download(
+        "waterways", lambda: download_waterways(storage, gdf_buffer)
+    )
+    if skipped:
+        failed.append(skipped)
+
+    skipped = _try_osm_download(
+        "protected_areas",
+        lambda: download_protected_areas(storage, gdf_buffer),
+    )
+    if skipped:
+        failed.append(skipped)
+
+    if failed:
+        logger.warning("Geophysical download finished with skips: %s", ", ".join(failed))
+    else:
+        logger.info("Geophysical data downloaded successfully")
+    return failed
 
 
 def download_power_networks(
@@ -74,25 +97,6 @@ def download_power_networks(
 ) -> None:
     """
     Download power network elements from OpenStreetMap for the given area of interest and separate them by geometry type.
-
-    Parameters
-    ----------
-    aoi : Any
-        The area of interest
-    storage : BaseStorage
-        The storage object
-    line_name : str, optional
-        The name of the file to store line geometries, by default "power_lines.geojson"
-    point_name : str, optional
-        The name of the file to store point geometries, by default "power_points.geojson"
-    polygon_name : str, optional
-        The name of the file to store polygon geometries, by default "power_polygons.geojson"
-    source : str, optional
-        The data source, by default "osm"
-    query : dict, optional
-        The query to use, by default includes power lines, cables, substations, plants, and transformers.
-    crs : str, optional
-        The coordinate reference system to use, by default WGS84 (EPSG:4326)
     """
     final_power_networks_gdf = load_power_networks(aoi, source, query, crs)
 
@@ -135,21 +139,6 @@ def download_pipelines(
 ) -> None:
     """
     Download pipeline elements from OpenStreetMap for the given area of interest.
-
-    Parameters
-    ----------
-    aoi : Any
-        The area of interest
-    storage : BaseStorage
-        The storage object
-    name : str, optional
-        The name of the file to store line geometries, by default "pipelines_lines.geojson"
-    source : str, optional
-        The data source, by default "osm"
-    query : dict, optional
-        The query to use, by default includes pipelines for oil, gas, water, sewage, and heat.
-    crs : str, optional
-        The coordinate reference system to use, by default WGS84 (EPSG:4326)
     """
     logger.info("Downloading pipelines data...")
     lines_gdf = load_pipelines(aoi, source, query, crs)
@@ -159,19 +148,30 @@ def download_pipelines(
     logger.info("Pipelines data downloaded successfully")
 
 
-def download_infrastructure_data(storage, gdf: gpd.GeoDataFrame) -> None:
+def download_infrastructure_data(storage, gdf: gpd.GeoDataFrame) -> list[str]:
     """
-    Downloads infrastructure data (roads, buildings, power networks, pipelines)
+    Downloads infrastructure data (roads, buildings, power networks, pipelines).
 
-    Parameters
-    ----------
-    storage : Storage
-        Storage object to save the downloaded data
-    gdf : GeoDataFrame
-        GeoDataFrame with the area of interest
+    OSM/network failures are soft: each failed layer is skipped and listed in
+    the returned list so the pipeline can continue with a Warning.
     """
     gdf_buffer = create_buffer(gdf, 5000)
-    download_roads(storage, gdf_buffer)
-    download_buildings(storage, gdf_buffer)
-    download_power_networks(storage, gdf_buffer)
-    download_pipelines(storage, gdf_buffer)
+    failed: list[str] = []
+
+    for label, fn in (
+        ("roads", lambda: download_roads(storage, gdf_buffer)),
+        ("buildings", lambda: download_buildings(storage, gdf_buffer)),
+        ("power_networks", lambda: download_power_networks(storage, gdf_buffer)),
+        ("pipelines", lambda: download_pipelines(storage, gdf_buffer)),
+    ):
+        skipped = _try_osm_download(label, fn)
+        if skipped:
+            failed.append(skipped)
+
+    if failed:
+        logger.warning(
+            "Infrastructure download finished with skips: %s", ", ".join(failed)
+        )
+    else:
+        logger.info("Infrastructure data downloaded successfully")
+    return failed

@@ -23,6 +23,8 @@ from spai.processing import read_raster
 from spai.image.xyz import get_image_data, get_tile_data, ready_image
 from spai.image.xyz.errors import ImageOutOfBounds
 
+from pipeline_status import data_available_payload, read_pipeline_status
+
 
 app = FastAPI(title="api")
 app.add_middleware(
@@ -197,52 +199,16 @@ def get_dem_min_max_values():
     return {"min": min_value, "max": max_value}
 
 
-def _read_pipeline_status() -> dict:
-    """Read pipeline_status.json from storage via pandas, return a plain dict."""
-    status_path = "pipeline_status.json"
-    idle = {
-        "status": "Idle",
-        "message": "No pipeline run yet",
-        "updated_at": None,
-    }
-    if not storage.exists(status_path):
-        return idle
-    try:
-        df = storage.read(status_path)
-        if df is None or df.empty:
-            return idle
-        row = df.iloc[0]
-        out = {}
-        for key, value in row.items():
-            if pd.isna(value):
-                out[key] = None
-            elif hasattr(value, "isoformat"):
-                out[key] = value.isoformat()
-            else:
-                out[key] = value
-        return out
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/pipeline/status")
 def pipeline_status():
     """Current pipeline status registry from storage."""
-    return _read_pipeline_status()
+    return read_pipeline_status(storage)
 
 
 @app.get("/data_available")
 def data_available():
     """Whether the pipeline has produced ready outputs."""
-    pipeline = _read_pipeline_status()
-    ready = pipeline.get("status") == "Ready"
-    return {
-        "status": "healthy",
-        "data_available": ready,
-        "data_status": "ready" if ready else "no_data",
-        "pipeline_status": pipeline.get("status"),
-        "message": pipeline.get("message"),
-    }
+    return data_available_payload(read_pipeline_status(storage))
 
 
 @app.get("/health")

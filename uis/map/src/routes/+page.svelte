@@ -4,6 +4,7 @@
 	import LayersControl from '$components/map/LayersControl.svelte';
 	import { BASEMAPS, BASEMAP_LAYERS, DEFAULT_BASEMAP, BASEMAP_OPTIONS } from '$components/map/basemaps.js';
 	import Analytics from '$components/Analytics.svelte';
+	import PipelineStatusBanner from '$components/PipelineStatusBanner.svelte';
 
 	export let data;
 
@@ -13,7 +14,8 @@
 </script>
 
 <div class="box-border flex min-h-0 flex-1 flex-row gap-3 p-3">
-	<div class="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+	<div class="relative flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+		<PipelineStatusBanner {api_url} />
 		<div class="h-full min-h-0 min-w-0 flex-1">
 		<Map
 			zoom={6}

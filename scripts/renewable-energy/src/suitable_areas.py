@@ -58,7 +58,7 @@ def find_suitable_areas(storage, aoi_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         infrastructure_buffer = infrastructure_buffer.dissolve()
 
     # Find areas that are NOT protected
-    if not protected_areas.empty:
+    if protected_areas is not None and not protected_areas.empty:
         non_protected = aoi_gdf.overlay(protected_areas, how="difference")
     else:
         non_protected = aoi_gdf

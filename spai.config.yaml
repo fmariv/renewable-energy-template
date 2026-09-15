@@ -1,18 +1,19 @@
-project: renewable-energy-template
+project: renewable-energy-templatee
 storage:
   - name: data
     type: s3
 scripts:
   - name: renewable-energy
     run_on_start: true
-    # workdir: /app2 # useful also when using custom Dockerfile (no image)
-    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-script:v0
+    # Must match Dockerfile WORKDIR so SPAI mounts spai.vars.json here
+    workdir: /app2
+    image: europe-west1-docker.pkg.dev/spai-430907/spai-build/renewable-energy-template-script:latest
 apis:
   - name: api
     port: 8021
     host: localhost
-    # workdir: /app
-    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-api:v0
+    workdir: /app
+    image: europe-west1-docker.pkg.dev/spai-430907/spai-build/renewable-energy-template-api:latest
     autoscaling:
       min: 1
       max: 1
@@ -23,8 +24,8 @@ uis:
     command: npm run deploy
     port: 5173
     runtime: node
-    # workdir: /app
-    # image: europe-west1-docker.pkg.dev/spai-430907/spai-build-staging/renewable-energy-ui:v0
+    workdir: /app
+    image: europe-west1-docker.pkg.dev/spai-430907/spai-build/renewable-energy-template-ui:latest
     autoscaling:
       min: 1
       max: 1
