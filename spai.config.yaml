@@ -1,4 +1,4 @@
-project: renewable-energy-templatee
+project: renewable-energy-template
 storage:
   - name: data
     type: s3
