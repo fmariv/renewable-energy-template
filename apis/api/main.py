@@ -23,7 +23,11 @@ from spai.processing import read_raster
 from spai.image.xyz import get_image_data, get_tile_data, ready_image
 from spai.image.xyz.errors import ImageOutOfBounds
 
-from src.pipeline_status import data_available_payload, read_pipeline_status
+from src.pipeline_status import (
+    data_available_payload,
+    data_unavailable_http,
+    read_pipeline_status,
+)
 from src.lazy import LazyObject
 
 
@@ -57,19 +61,25 @@ def root():
 
 @app.get("/aoi")
 def retrieve_aoi():
-    return vars["AOI"]
+    try:
+        return vars["AOI"]
+    except Exception:
+        raise data_unavailable_http()
 
 
 @app.get("/aois/{scenario}")
 def retrieve_aoi_id(scenario: str):
-    aois = vars["AOI"]
-    scenario = scenario.lower()
-    # read the dict as geodataframe
-    gdf = gpd.GeoDataFrame.from_features(aois)
-    aoi = gdf[gdf["scenario"] == scenario]
-    aoi_gdf = json.loads(aoi.to_json())
+    try:
+        aois = vars["AOI"]
+        scenario = scenario.lower()
+        # read the dict as geodataframe
+        gdf = gpd.GeoDataFrame.from_features(aois)
+        aoi = gdf[gdf["scenario"] == scenario]
+        aoi_gdf = json.loads(aoi.to_json())
 
-    return aoi_gdf
+        return aoi_gdf
+    except Exception:
+        raise data_unavailable_http()
 
 
 @app.get("/analytics/{file}")
@@ -106,7 +116,7 @@ async def analytics(file: str):
         analytics = json.loads(analytics)
         return analytics
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Data temporarily unavailable. Check the logs or contact support.")
 
 
 @app.get("/images/")
